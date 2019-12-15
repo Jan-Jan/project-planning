@@ -2,8 +2,10 @@
 
 	[staff.persona]
 	unavailable = [
-		#[2019-01-01, 2019-01-14, "vacation"],
-		#[2019-02-15, 2019-02-30, "offsite"]
+		["2019-01-01", "2019-01-3", "vacation"],
+		["2019-02-01", "offsite"],
+		["2019-02-27", "2019-02-30"],
+    ["2019-3-3"],
 	]
 
 	[staff.personb]
@@ -17,7 +19,7 @@
 	fat = 2
 	staff = "persona"
 	title = "prep"
-	#start = 2019-01-01
+	start = "2019-01-01"
 
 	[tasks.C]
 	days = 14

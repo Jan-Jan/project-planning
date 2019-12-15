@@ -1,8 +1,12 @@
+`use strict`
+
 const toml = require('toml')
 const fs = require('fs')
 const { promisify } = require('util')
 const { produce } = require('immer')
 const chalk = require('chalk')
+const moment = require('moment')
+
 
 const readFileAsync = promisify(fs.readFile)
 const writeFileAsync = promisify(fs.writeFile)
@@ -23,6 +27,54 @@ const arrayify = val =>
     ? val
     : [val].filter(isDefined)
 
+const dateStr = date =>
+  date.format(`YYYY-MM-DD`)
+
+const momentize = dateStr =>
+  moment(dateStr, `YYYY-MM-DD`)
+
+const isInvalidDate = date =>
+  dateStr(date) == `Invalid date`
+
+const maybeValidDate = dateStr =>
+  dateStr.match(/^\d{2,4}-\d{1,2}-\d{1,2}$/)
+
+const unavailableKeys = arr => {
+  const unavail = {}
+
+  for (const entry of arr) {
+    const lastIdx = entry.length - 1
+
+    const start = momentize(entry[0])
+    if (isInvalidDate(start)) {
+      throw new Error(`"${entry[0]}" is not a valid date (to use for unavailable staff)`)
+    }
+
+    const lastEntry = entry[lastIdx]
+    
+    // if last entry of array is not a date, then value defaults to "off"
+    const value = isInvalidDate(momentize(lastEntry))
+      ? lastEntry
+      : `off`
+    
+    if (value == lastEntry && maybeValidDate(lastEntry)) {
+      error(`"${lastEntry}" is not a valid date (see "[${entry}]") -- proceeding with start date as finish`)
+    }
+ 
+    // if second entry is a not date, then finish defaults to start
+    let finish = moment(entry[1] || `gibberish`)
+    if(isInvalidDate(finish)) {
+      finish = momentize(dateStr(start))
+    }
+
+    console.log(`${value}: `, start.format(`YYYY-MM-DD`), finish.format(`YYYY-MM-DD`))
+    for(finish.add(1, `days`); start.isBefore(finish); start.add(1, `days`)) {
+      unavail[dateStr(start)] = value
+    }
+  }
+  return unavail
+}
+
 const lowerCase = arr =>
   arr.reduce((acc,cur) => ([ ...acc, cur.toLowerCase() ]), [])
 
@@ -39,7 +91,7 @@ const defaultsStaff = config =>
     
       draft.staff[key] = {
         ...refStaff,
-        unavailable: arrayify(refStaff.unavailable),
+        unavailable: unavailableKeys(arrayify(refStaff.unavailable)),
         weekends: weekendKeys(weekendArrayify(refStaff.weekends)),
         commitment: refStaff.commitment || 1,
       }
@@ -82,7 +134,7 @@ const run = async () => {
     const res = (await readFileAsync('plan.toml')).toString()
     //console.log(res)
     const parsed = defaults(toml.parse(res))
-    console.log(JSON.stringify(parsed,null,2))
+    //console.log(JSON.stringify(parsed,null,2))
 
   } catch (err) {
     console.error(err)
