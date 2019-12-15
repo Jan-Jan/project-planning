@@ -1,0 +1,27 @@
+[people] # this could be defined in another file
+
+	[people.persona]
+	unavailable = [
+		#[2019-01-01, 2019-01-14, "vacation"],
+		#[2019-02-15, 2019-02-30, "offsite"]
+	]
+
+	[people.personb]
+	weekends = ["WED", "fri", "SAT"] # hand lower case
+	commitment = 0.7 # should also handle 70%
+
+[tasks]
+
+	[tasks.A]
+	days = 5
+	fat = 2
+	staff = "persona"
+	title = "prep"
+	#start = 2019-01-01
+
+	[tasks.C]
+	days = 14
+	staff = "personb"
+
+[requires]
+C = "A"

@@ -1,0 +1,80 @@
+[people] # this could be defined in another file
+
+	[persona]
+	unavailable = [
+		#[2019-01-01, 2019-01-14, "vacation"],
+		#[2019-02-15, 2019-02-30, "offsite"]
+	]
+	site = "SA"
+
+	[personb]
+	site = "CH-ZH"
+	weekends = ["WED", "fri", "SAT"] # hand lower case
+	commitment = 0.7 # should also handle 70%
+
+	[personc] # should give warning, person never utilized
+	site = "US" # should give warning, site not defined
+	# if site not specified, then should give info and default to normal weekends and no holidays
+
+[sites] # this could be defined in another file
+	[SA]
+	# no holidays defined for ES, should give warning
+	weekends = ["Fri","Sat"]
+
+	[CH-ZH]
+	holidays = [
+		2019-01-01,
+		#[2019-01-02, "half-day"], # don't know how to handle this
+		2019-03-05
+	]
+	# weekends not defined, should assume ["SAT", "SUN"]
+
+[tasks]
+
+	[A]
+	days = 5
+	fat = 2
+	staff = "persona"
+	title = "prep"
+	start = 2019-01-01
+
+	[B]
+	staff = [
+		{ staff = "persona", days = 10 },
+		{ staff = "personb", days = 5, fat = 15 }
+	]
+	title = "setup"
+	start = 2019-01-02 # this start date precedes 
+
+	[C]
+	days = 14
+	staff = "personb"
+
+	[D1]
+	days = 10
+	fat = 5
+	# staff not defined, should give warning
+
+	[D3]
+	days = 1
+	staff = "personb"
+
+	[E]
+	# days not defined, should give warning
+	staff = "persona"
+	
+
+	[F]
+	title = "stand-alone"
+	days = 1
+	staff = "persona" # should be offset to start after "A" (due to availability of "A" and this not being on a critical path)	
+
+[requires]
+# will give error if graph is cyclical
+# will give warning if there is more than 1 graph, eg, "F" is not connected to any other tasks
+B = "A"
+C = "B"
+D1 = "C"
+D2 = "C" # D2 is not defined, should be warning
+D3 = "C"
+E = ["D1","D3"]

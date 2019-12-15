@@ -1,0 +1,16 @@
+{
+  "name": "project-planning",
+  "version": "0.1.0",
+  "description": "to make it simple to create project plans, so multiple scenarios can be compared",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dr. Jan-Jan van der Vyver",
+  "license": "MIT",
+  "dependencies": {
+    "graphlib": "^2.1.8",
+    "toml": "^3.0.0",
+    "yargs": "^15.0.2"
+  }
+}
