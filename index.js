@@ -24,7 +24,13 @@ const arrayify = val =>
     : [val].filter(isDefined)
 
 const lowerCase = arr =>
-  arr.reduce((val,cur) => ([...val, cur.toLowerCase()]), [])
+  arr.reduce((acc,cur) => ([ ...acc, cur.toLowerCase() ]), [])
+
+const weekendArrayify = val =>
+  lowerCase(Array.isArray(val) ? val : [`sat`, `sun`])
+
+const weekendKeys = arr =>
+  arr.reduce((acc,key) => ({ ...acc, [key]: `weekend` }), {})
 
 const defaultsStaff = config =>
   produce(config, draft => {
@@ -34,9 +40,7 @@ const defaultsStaff = config =>
       draft.staff[key] = {
         ...refStaff,
         unavailable: arrayify(refStaff.unavailable),
-        weekends: Array.isArray(refStaff.weekends)
-          ? lowerCase(refStaff.weekends)
-          : [`sat`, `sun`],
+        weekends: weekendKeys(weekendArrayify(refStaff.weekends)),
         commitment: refStaff.commitment || 1,
       }
     }
