@@ -9,7 +9,9 @@
   "author": "Dr. Jan-Jan van der Vyver",
   "license": "MIT",
   "dependencies": {
+    "chalk": "^3.0.0",
     "graphlib": "^2.1.8",
+    "immer": "^5.0.1",
     "toml": "^3.0.0",
     "yargs": "^15.0.2"
   }

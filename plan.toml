@@ -1,12 +1,12 @@
-[people] # this could be defined in another file
+[staff] # this could be defined in another file
 
-	[people.persona]
+	[staff.persona]
 	unavailable = [
 		#[2019-01-01, 2019-01-14, "vacation"],
 		#[2019-02-15, 2019-02-30, "offsite"]
 	]
 
-	[people.personb]
+	[staff.personb]
 	weekends = ["WED", "fri", "SAT"] # hand lower case
 	commitment = 0.7 # should also handle 70%
 
