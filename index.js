@@ -31,7 +31,7 @@ const dateStr = date =>
   date.format(`YYYY-MM-DD`)
 
 const momentize = dateStr =>
-  moment(dateStr, `YYYY-MM-DD`)
+  moment(dateStr, [`YYYY-MM-DD`, `YYYY-M-DD`, `YYYY-MM-D`, `YYYY-M-D`], true)
 
 const isInvalidDate = date =>
   dateStr(date) == `Invalid date`
@@ -62,12 +62,11 @@ const unavailableKeys = arr => {
     }
  
     // if second entry is a not date, then finish defaults to start
-    let finish = moment(entry[1] || `gibberish`)
+    let finish = momentize(entry[1] || `gibberish`)
     if(isInvalidDate(finish)) {
       finish = momentize(dateStr(start))
     }
 
-    console.log(`${value}: `, start.format(`YYYY-MM-DD`), finish.format(`YYYY-MM-DD`))
     for(finish.add(1, `days`); start.isBefore(finish); start.add(1, `days`)) {
       unavail[dateStr(start)] = value
     }
