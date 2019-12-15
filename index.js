@@ -7,9 +7,14 @@ const { produce } = require('immer')
 const chalk = require('chalk')
 const moment = require('moment')
 const graphlib = require('graphlib')
+const Holidays = require('date-holidays')
+const { DateTime } = require('luxon')
 
 const readFileAsync = promisify(fs.readFile)
+
+
 const writeFileAsync = promisify(fs.writeFile)
+
 
 const error = str =>
   console.log(chalk.red.bold(`ERROR: ` + str))
@@ -109,11 +114,19 @@ const defaultsStaff = config =>
     for (const key in draft.staff) {
       const refStaff = draft.staff[key]
     
+      !isDefined(refStaff.office)
+        && warn(`"office" is not set for "staff.${key}" (ie, no public holidays will be considered)`)
+
+      
+      refStaff.office && !isDefined(config.office[refStaff.office])
+        && error(`"${refStaff.office}" is not defined under "office", but referenced by "staff.${key}"`)
+
       draft.staff[key] = {
         ...refStaff,
         unavailable: unavailableKeys(key, arrayify(refStaff.unavailable)),
         weekends: weekendKeys(weekendArrayify(refStaff.weekends)),
         commitment: refStaff.commitment || 1,
+        region: refStaff.office && config.office[refStaff.office],
       }
     }
   })
@@ -166,12 +179,23 @@ const throwError = errMsg => {
 }
 
 
-const isOff = (staff, date) => {
-  const isWeekend = staff && staff.weekends[date.day()]
-  const isPublicHoliday = false
-  const isUnavailable = staff && staff.unavailable[dateStr(date)]
+const isOff = (staff, datum) => {
+  if(!staff) {
+    return false
+  }
 
-  isPublicHoliday && warn(`${dateStr(date)} is ph`)
+  const isWeekend = staff.weekends[datum.day()]
+  const isUnavailable = staff.unavailable[dateStr(datum)]
+
+  let isPublicHoliday = false
+  if (staff.region) {
+    const hd = new Holidays()
+    hd.init(...staff.region)
+    
+    const midMorning = DateTime.fromISO(`${dateStr(datum)}T09:00:00`, { zone: hd.__timezone }).toJSDate()
+    const midAfternoon = DateTime.fromISO(`${dateStr(datum)}T15:00:00`, { zone: hd.__timezone }).toJSDate()
+    isPublicHoliday = hd.isHoliday(midMorning) || hd.isHoliday(midAfternoon)
+  }
 
   return isWeekend || isPublicHoliday || isUnavailable
 }

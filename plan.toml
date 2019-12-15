@@ -7,10 +7,15 @@
 		["2019-02-27", "2019-02-30"],
     ["2019-3-3"],
 	]
+  office = "ZRH"
 
 	[staff.personb]
 	weekends = ["WED", "fri", "SAT"] # hand lower case
 	commitment = 0.7 # should also handle 70%
+
+[office]
+ZRH = ["CH", "ZH"]
+SVL = ["US", "CA"]
 
 [tasks]
 
