@@ -1,0 +1,40 @@
+<html>
+<head>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <script type="text/javascript">
+    google.charts.load('current', {'packages':['gantt']});
+    google.charts.setOnLoadCallback(drawCharts);
+
+    function drawChart(id, rows) {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('string', 'Task ID');
+      data.addColumn('string', 'Task Name');
+      data.addColumn('date', 'Start Date');
+      data.addColumn('date', 'End Date');
+      data.addColumn('number', 'Duration');
+      data.addColumn('number', 'Percent Complete');
+      data.addColumn('string', 'Dependencies');
+
+      data.addRows(rows);
+
+      var options = {
+        height: 275
+      };
+
+      var chart = new google.visualization.Gantt(document.getElementById(id));
+
+      chart.draw(data, options);
+    }
+    
+    function drawCharts() {
+      drawChart('graph_opti',[['A', 'prep', new Date(2019,1,1), new Date(2019,1,10), 432000000, 0, ''], ['B', 'B', new Date(2019,1,3), new Date(2019,1,3), 86400000, 0, ''], ['C', 'C', new Date(2019,1,13), new Date(2019,2,4), 1209600000, 0, 'A,B']])
+      drawChart('graph_pessi',[['A', 'prep', new Date(2019,1,1), new Date(2019,1,12), 604800000, 0, ''], ['B', 'B', new Date(2019,1,3), new Date(2019,1,3), 86400000, 0, ''], ['C', 'C', new Date(2019,1,13), new Date(2019,2,4), 1209600000, 0, 'A,B']])
+    }
+  </script>
+</head>
+<body>
+  <div id="graph_opti"></div>
+  <div id="graph_pessi"></div>
+</body>
+</html>
