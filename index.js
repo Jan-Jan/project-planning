@@ -39,7 +39,7 @@ const isInvalidDate = date =>
 const maybeValidDate = dateStr =>
   dateStr.match(/^\d{2,4}-\d{1,2}-\d{1,2}$/)
 
-const unavailableKeys = arr => {
+const unavailableKeys = (staffKey, arr) => {
   const unavail = {}
 
   for (const entry of arr) {
@@ -57,16 +57,16 @@ const unavailableKeys = arr => {
       ? lastEntry
       : `off`
     
-    if (value == lastEntry && maybeValidDate(lastEntry)) {
-      error(`"${lastEntry}" is not a valid date (see "[${entry}]") -- proceeding with start date as finish`)
-    }
- 
     // if second entry is a not date, then finish defaults to start
     let finish = momentize(entry[1] || `gibberish`)
     if(isInvalidDate(finish)) {
       finish = momentize(dateStr(start))
     }
 
+    if (value == entry[1] && maybeValidDate(entry[1])) {
+      error(`"${entry[1]}" is not a valid date (see "[${entry}]" of staff.${staffKey}'s unavailable values) -- using "${dateStr(finish)}" instead`)
+    }
+ 
     for(finish.add(1, `days`); start.isBefore(finish); start.add(1, `days`)) {
       unavail[dateStr(start)] = value
     }
@@ -74,14 +74,24 @@ const unavailableKeys = arr => {
   return unavail
 }
 
-const lowerCase = arr =>
-  arr.reduce((acc,cur) => ([ ...acc, cur.toLowerCase() ]), [])
+const lowerCase3 = arr =>
+  arr.reduce((acc,cur) => ([ ...acc, cur.toLowerCase().slice(0,3) ]), [])
 
 const weekendArrayify = val =>
-  lowerCase(Array.isArray(val) ? val : [`sat`, `sun`])
+  lowerCase3(Array.isArray(val) ? val : [`sat`, `sun`])
+
+const reverseWeekends = {
+  sun: 0,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+}
 
 const weekendKeys = arr =>
-  arr.reduce((acc,key) => ({ ...acc, [key]: `weekend` }), {})
+  arr.reduce((acc,key) => ({ ...acc, [reverseWeekends[key]]: key }), {})
 
 const defaultsStaff = config =>
   produce(config, draft => {
@@ -90,7 +100,7 @@ const defaultsStaff = config =>
     
       draft.staff[key] = {
         ...refStaff,
-        unavailable: unavailableKeys(arrayify(refStaff.unavailable)),
+        unavailable: unavailableKeys(key, arrayify(refStaff.unavailable)),
         weekends: weekendKeys(weekendArrayify(refStaff.weekends)),
         commitment: refStaff.commitment || 1,
       }
