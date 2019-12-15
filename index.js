@@ -122,19 +122,25 @@ const defaultsStaff = config =>
 const defaultsTasks = config =>
   produce(config, draft => {
     for (const key in draft.tasks) {
-      const refTask = draft.tasks[key]
+      const {
+        days,
+        fat,
+        ...refTask
+      } = draft.tasks[key]
 
       !isDefined(refTask.staff)
         && error(`"tasks.${key}.staff" is not set`)
 
-      !isDefined(refTask.days)
-        && warn(`"tasks.${key}.days" is not set (defaults to 0)`)
+      !isDefined(days)
+        && warn(`"tasks.${key}.days" is not set (defaults to 1)`)
       
+      const optimistic = days || 1; // a 1 day task finishes on the same day, so 0 has no meaning
+
       draft.tasks[key] = {
         ...refTask,
         title: refTask.title || key,
-        days: refTask.days || 0,
-        fat: refTask.fat || 0,
+        optimistic,
+        pessimistic: optimistic + (fat || 0),
       }
     }
   })
@@ -159,8 +165,15 @@ const throwError = errMsg => {
   throw new Error(chalk.red.bold(errMsg))
 }
 
-const isOff = (staff, date) =>
-  false
+
+const isOff = (staff, date) => {
+  const isWeekend = false
+  const isPublicHoliday = false
+  const isUnavailable =  false
+
+  return isWeekend || isPublicHoliday || isUnavailable
+}
+
 
 const process = config => {
   const graph = new graphlib.Graph({ directed: true })
@@ -209,11 +222,9 @@ const process = config => {
         const pred = graph.node(predKey)
 console.log(`pred =\n`,JSON.stringify(pred,null,2))
         for (const oppe of ['optimistic' ,'pessimistic']) { 
-          for(
-            const datum = pred.dates[oppe].finish.clone().add(1, 'days');
-            isOff(staff, datum);
-            start.add(1, `days`)
-          ) {}
+          const datum = pred.dates[oppe].finish.clone().add(1, 'days')
+          for(; isOff(staff, datum); datum.add(1, `days`)) {
+          }
           if(!dates[oppe].start || dates[oppe].start.isBefore(datum)) {
             dates[oppe].start = datum
           }
@@ -222,7 +233,19 @@ console.log(`pred =\n`,JSON.stringify(pred,null,2))
     }
 
     // calculate finish
+    for (const oppe of ['optimistic' ,'pessimistic']) {
+      const datum = dates[oppe].start.clone()
+      for(let days = task[oppe] - 1; days >0; days--) {
+          for(
+            datum.add(1, `days`);
+            isOff(staff, datum);
+            datum.add(1, `days`)
+          ) {}
+      }
+      dates[oppe].finish = datum
+    }
 
+console.log(`task for "${node}" =`, JSON.stringify(task,null,2))
 console.log(`dates for "${node}" =`, JSON.stringify(dates,null,2))
     graph.setNode(node, { task, staff, dates })
 
@@ -235,7 +258,6 @@ console.log(`dates for "${node}" =`, JSON.stringify(dates,null,2))
 const run = async () => {
   try {
     const res = (await readFileAsync('plan.toml')).toString()
-    //console.log(res)
     const results = process(defaults(toml.parse(res)))
   
   } catch (err) {

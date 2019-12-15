@@ -26,6 +26,7 @@
 	staff = "personb"
 
   [tasks.B]
+  start = "2019-1-3"
 
 [requires]
 C = ["A", "B"]
