@@ -129,7 +129,7 @@ const defaultsTasks = config =>
       } = draft.tasks[key]
 
       !isDefined(refTask.staff)
-        && error(`"tasks.${key}.staff" is not set`)
+        && error(`"tasks.${key}.staff" is not set (calculations done on 7 day work week with no off time)`)
 
       !isDefined(days)
         && warn(`"tasks.${key}.days" is not set (defaults to 1)`)
@@ -167,11 +167,18 @@ const throwError = errMsg => {
 
 
 const isOff = (staff, date) => {
-  const isWeekend = false
+  const isWeekend = staff && staff.weekends[date.day()]
   const isPublicHoliday = false
-  const isUnavailable =  false
+  const isUnavailable = staff && staff.unavailable[dateStr(date)]
+
+  isPublicHoliday && warn(`${dateStr(date)} is ph`)
 
   return isWeekend || isPublicHoliday || isUnavailable
+}
+
+
+const incForOffDays = (staff, datum) => {
+  for(; isOff(staff, datum); datum.add(1, `days`)) {}  
 }
 
 
@@ -220,11 +227,9 @@ const process = config => {
     } else { // start is a day after the last preceding task finishes
       for (const predKey of preds) {
         const pred = graph.node(predKey)
-console.log(`pred =\n`,JSON.stringify(pred,null,2))
         for (const oppe of ['optimistic' ,'pessimistic']) { 
           const datum = pred.dates[oppe].finish.clone().add(1, 'days')
-          for(; isOff(staff, datum); datum.add(1, `days`)) {
-          }
+          incForOffDays(staff,datum)
           if(!dates[oppe].start || dates[oppe].start.isBefore(datum)) {
             dates[oppe].start = datum
           }
@@ -232,23 +237,16 @@ console.log(`pred =\n`,JSON.stringify(pred,null,2))
       }
     }
 
-    // calculate finish
     for (const oppe of ['optimistic' ,'pessimistic']) {
       const datum = dates[oppe].start.clone()
-      for(let days = task[oppe] - 1; days >0; days--) {
-          for(
-            datum.add(1, `days`);
-            isOff(staff, datum);
-            datum.add(1, `days`)
-          ) {}
+      incForOffDays(staff,datum)
+      for(let days = task[oppe] - 1; days >0; datum.add(1, `days`) && days--) {
+        incForOffDays(staff,datum)
       }
       dates[oppe].finish = datum
     }
 
-console.log(`task for "${node}" =`, JSON.stringify(task,null,2))
-console.log(`dates for "${node}" =`, JSON.stringify(dates,null,2))
     graph.setNode(node, { task, staff, dates })
-
   }
 
   graphlib.json.write(graph)
