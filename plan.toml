@@ -25,5 +25,8 @@
 	days = 14
 	staff = "personb"
 
+  [tasks.B]
+
 [requires]
-C = "A"
+C = ["A", "B"]
+#C = "A"

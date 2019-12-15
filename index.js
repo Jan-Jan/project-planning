@@ -154,43 +154,81 @@ const defaults = config =>
 
 //-------------------
 
+
+const throwError = errMsg => {
+  throw new Error(chalk.red.bold(errMsg))
+}
+
+const isOff = (staff, date) =>
+  false
+
 const process = config => {
   const graph = new graphlib.Graph({ directed: true })
 
   for (const edgeKey in config.requires) {
     if (!config.tasks[edgeKey]) {
-      throw new Error(chalk.red(`"${edgeKey}" is note defined under "tasks" (but referenced in "requires")`))
+      throwError(`"${edgeKey}" is note defined under "tasks" (but referenced in "requires")`)
     }
-    if (!config.tasks[config.requires[edgeKey]]) {
-      throw new Error(chalk.red(`"${config.requires[edgeKey]}" is note defined under "tasks" (but referenced in "requires")`))
+    for (const required of config.requires[edgeKey]) {
+
+      if (!config.tasks[required]) {
+        throwError(`"${required}" is note defined under "tasks" (but referenced in "requires")`)
+      }
+      graph.setEdge(required,edgeKey)
     }
-    graph.setEdge(config.requires[edgeKey],edgeKey)
   }
 
   const cycles = graphlib.alg.findCycles(graph)
   if (cycles.length > 0) {
-    const errMsg = `"requires" contains cyclical definition involving "${JSON.stringify(cycles)}"`
-    throw new Error(chalk.red.bold(errMsg))
+    throwError(`"requires" contains cyclical definition involving "${JSON.stringify(cycles)}"`)
   }
 
   const subGraphs = graphlib.alg.components(graph)
   if (subGraphs.length > 1) {
-    const errMsg = `Your task requirements specify ${subGraphs.length} sub graphs: ${JSON.stringify(subGraphs)}`
-    throw new Error(chalk.red.bold(errMsg))
+    throwError(`Your task requirements specify ${subGraphs.length} sub graphs: ${JSON.stringify(subGraphs)}`)
   }
 
-  const sortedGraph = graphlib.alg.topsort(graph)
+  const sortedNodes = graphlib.alg.topsort(graph)
   
-  console.log(chalk.bold(`sortedGraph = ${JSON.stringify(sortedGraph)}`))
+  for (const node of sortedNodes) {
+    const preds = graph.predecessors(node)
+    const isStartingNode = preds == undefined || preds.length === 0
+    const dates = { optimistic: {}, pessimistic: {} }
+    const task = config.tasks[node]
+    const staff = config.staff[task.staff]
 
+    if (isStartingNode) {
+      // they should have starting dates defined, if not throw error
+      if (!task.start) {
+        throwError(`task "node" has a missging required "start" field`)
+      }
+      dates.optimistic.start = momentize(task.start)
+      dates.pessimistic.start = momentize(task.start)
+    } else { // start is a day after the last preceding task finishes
+      for (const predKey of preds) {
+        const pred = graph.node(predKey)
+console.log(`pred =\n`,JSON.stringify(pred,null,2))
+        for (const oppe of ['optimistic' ,'pessimistic']) { 
+          for(
+            const datum = pred.dates[oppe].finish.clone().add(1, 'days');
+            isOff(staff, datum);
+            start.add(1, `days`)
+          ) {}
+          if(!dates[oppe].start || dates[oppe].start.isBefore(datum)) {
+            dates[oppe].start = datum
+          }
+        }
+      }
+    }
 
-  for (const subGraph of subGraphs) {
-    // determine the starting nodes
-    // they should have starting dates defined, if not throw error
-    // calculate finish for said nodes
-    // repeat from those points, prioritising breadth-first starting with earliest finishers
+    // calculate finish
+
+console.log(`dates for "${node}" =`, JSON.stringify(dates,null,2))
+    graph.setNode(node, { task, staff, dates })
 
   }
+
+  graphlib.json.write(graph)
 }
 
 
@@ -199,7 +237,6 @@ const run = async () => {
     const res = (await readFileAsync('plan.toml')).toString()
     //console.log(res)
     const results = process(defaults(toml.parse(res)))
-    //console.log(JSON.stringify(parsed,null,2))
   
   } catch (err) {
     console.error(err)
