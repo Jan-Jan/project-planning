@@ -10,6 +10,7 @@
       var data = new google.visualization.DataTable();
       data.addColumn('string', 'Task ID');
       data.addColumn('string', 'Task Name');
+      data.addColumn('string', 'Resource');
       data.addColumn('date', 'Start Date');
       data.addColumn('date', 'End Date');
       data.addColumn('number', 'Duration');
@@ -28,8 +29,8 @@
     }
     
     function drawCharts() {
-      drawChart('graph_opti',[['A', 'prep', new Date(2019, 0, 1), new Date(2019, 0, 10), 432000000, 0, ''], ['B', 'B', new Date(2019, 0, 3), new Date(2019, 0, 3), 86400000, 0, ''], ['C', 'C', new Date(2019, 0, 13), new Date(2019, 1, 4), 1209600000, 0, 'A,B']])
-      drawChart('graph_pessi',[['A', 'prep', new Date(2019, 0, 1), new Date(2019, 0, 12), 604800000, 0, ''], ['B', 'B', new Date(2019, 0, 3), new Date(2019, 0, 3), 86400000, 0, ''], ['C', 'C', new Date(2019, 0, 13), new Date(2019, 1, 4), 1209600000, 0, 'A,B']])
+      drawChart('graph_opti',[['A', 'prep', 'persona', new Date(2019, 0, 1, 0, 0), new Date(2019, 0, 9, 23, 59), 345600000, 0, ''], ['B', 'B', 'undefined', new Date(2019, 0, 3, 0, 0), new Date(2019, 0, 3, 23, 59), 86400000, 0, ''], ['C', 'C', 'personb', new Date(2019, 0, 10, 0, 0), new Date(2019, 1, 1, 23, 59), 1209600000, 0, 'A,B']])
+      drawChart('graph_pessi',[['A', 'prep', 'persona', new Date(2019, 0, 1, 0, 0), new Date(2019, 0, 11, 23, 59), 518400000, 0, ''], ['B', 'B', 'undefined', new Date(2019, 0, 3, 0, 0), new Date(2019, 0, 3, 23, 59), 86400000, 0, ''], ['C', 'C', 'personb', new Date(2019, 0, 13, 0, 0), new Date(2019, 1, 4, 23, 59), 1209600000, 0, 'A,B']])
     }
   </script>
 </head>

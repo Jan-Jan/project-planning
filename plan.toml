@@ -20,7 +20,7 @@ SVL = ["US", "CA"]
 [tasks]
 
 	[tasks.A]
-	days = 5
+	days = 4
 	fat = 2
 	staff = "persona"
 	title = "prep"
