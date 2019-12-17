@@ -1,6 +1,6 @@
 {
   "name": "project-planning",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "to make it simple to create project plans, so multiple scenarios can be compared",
   "main": "index.js",
   "bin": {
