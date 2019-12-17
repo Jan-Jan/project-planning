@@ -14,6 +14,7 @@ const {
 
 const argv = require('yargs')
   .usage('Usage: $0 -i [file1] [file2]')
+  .array('i')
   .alias('i', 'input')
   .default('i', ['plan'])
   .describe('i', 'load input from specified files (the ".toml" extension will be added)')
@@ -25,7 +26,9 @@ const argv = require('yargs')
 const read = async files => {
   let config = {}
   for (const file of files) {
-    const input = toml.parse((await fs.readFile(`${file}.toml`)).toString())
+    const filePath = `${file}.toml`
+    console.log(`reading ${filePath}...`)
+    const input = toml.parse((await fs.readFile(filePath)).toString())
     config = { ...config, ...input }
   }
   return config
